@@ -3,7 +3,7 @@ title: "Untitled"
 output: html_document
 ---
 ```{r}
-Seasoning <- read.csv("C:/Users/epili/Desktop/BF/BF_Project/Seasoning_Consumption_Summary.csv",stringsAsFactors=FALSE)
+Seasoning <- read.csv("C:/Users/Mukesh/Desktop/BF/BF_Project/Seasoning_Consumption_Summary.csv",stringsAsFactors=FALSE)
 View(Seasoning)
 str(Seasoning)
 colnames(seasoning_series) <- c("Year","Month","Qty")
