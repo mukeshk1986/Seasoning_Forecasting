@@ -1,0 +1,156 @@
+---
+title: "Untitled"
+output: html_document
+---
+```{r}
+Seasoning <- read.csv("C:/Users/epili/Desktop/BF/BF_Project/Seasoning_Consumption_Summary.csv",stringsAsFactors=FALSE)
+View(Seasoning)
+str(Seasoning)
+colnames(seasoning_series) <- c("Year","Month","Qty")
+seasoning_series<-ts(Seasoning,start=c(2010,1),end=c(2017,12),frequency = 12)
+summary(seasoning_series)
+plot(seasoning_series[,3], xlab("Year"),ylab("Qty"))
+  
+```
+
+```{r}
+autoplot(seasoning_series[,"Qty"])
+```
+
+
+```{r}
+
+seasoning_train <- window(seasoning_series[,3],start = c(2010,1),end = c(2016,12))
+seasoning_test <- window(seasoning_series[,3],start = c(2017,1),end = c(2017,12))
+
+```
+
+```{r}
+na_mean <- meanf(seasoning_train,h=12)
+summary(na_mean)
+plot(na_mean)
+
+na_naive <- naive(seasoning_train,h=12)
+plot(na_naive)
+summary(na_naive)
+
+na_snaive <- snaive(seasoning_train,h=12)
+plot(na_snaive)
+summary(na_snaive)
+```
+
+```{r}
+acc_m <- accuracy(na_mean, seasoning_test)
+acc_n <- accuracy(na_naive, seasoning_test)
+acc_sn <- accuracy(na_snaive, seasoning_test)
+
+
+```
+
+
+```{r}
+seasoning.stl <- stl(seasoning_train[,1], s.window = 10)
+plot(seasoning.stl)
+summary(seasoning.stl)
+plot(seasoning.stl$time.series[,1]) # Seasonal trend
+plot(seasoning.stl$time.series[,2])
+seasoning.stl$
+seasoning.stl$time.series[,1]
+pred_stl<-forecast(seasoning.stl,h=12)
+accuracy(pred_stl, seasoning_test)
+plot(action_train[,'NA_Sales'],ylab="NA_Sales",xlab="Year")
+lines(action.stl$time.series[,2],col="red",ylab="Trend")
+
+```
+
+```{r}
+#ggAcf()
+```
+
+
+```{r}
+fit1 <- hw(seasoning_train,seasonal="additive", h=12)
+summary(fit1)
+fit1$mean
+acc_hw <- accuracy(fit1, seasoning_test)
+plot(fit1)
+```
+
+```{r}
+#Arima_model
+
+library(urca)
+
+Test2=ur.kpss(seasoning_train) # hence data is stationary as the pvalue is less than 5pct value
+summary(Test2)
+
+ggAcf(seasoning_train)
+Pacf(seasoning_train)
+
+arima.fit<-auto.arima(seasoning_train, seasonal = TRUE)
+summary(arima.fit)
+pred <- predict(arima.fit, n.ahead = 12)
+pred
+acc_au.arima <- accuracy(seasoning_test, pred$pred)
+```
+```{r}
+arima.fit2 <- Arima(seasoning_train, order = c(2,1,0))
+summary(arima.fit2)
+
+pred1 <- predict(arima.fit2, n.ahead = 12)
+acc_arima <- accuracy(seasoning_test, pred1$pred)
+```
+
+Moving Average
+```{r}
+Moving9 <- ma(seasoning_train, order=9)
+Moving5 <- ma(seasoning_train, order=5)
+Moving7 <- ma(seasoning_train, order=7)
+pred9 <- predict(Moving9,h=12)
+pred5 <- predict(Moving5,h=12)
+pred7 <- predict(Moving7,h=12)
+
+acc_9ma <- accuracy(pred9$mean,seasoning_test)
+acc_5ma <- accuracy(pred5$mean,seasoning_test)
+acc_7ma <- accuracy(pred7$mean,seasoning_test)
+
+autoplot(seasoning_train, series="Data") +
+  autolayer(ma(seasoning_train, order=5), series="5-MA") +
+  xlab("Year") + ylab("Qty") +
+  ggtitle("5-MA Seasoning Data") +
+  scale_colour_manual(values=c("Data"="grey50","5-MA"="red"),
+                      breaks=c("Data","5-MA"))
+
+
+autoplot(seasoning_train, series="Data") +
+  autolayer(ma(seasoning_train, order=7), series="7-MA") +
+  xlab("Year") + ylab("Qty") +
+  ggtitle("7-MA Seasoning Data") +
+  scale_colour_manual(values=c("Data"="grey50","7-MA"="red"),
+                      breaks=c("Data","7-MA"))
+
+autoplot(seasoning_train, series="Data") +
+  autolayer(ma(seasoning_train, order=9), series="9-MA") +
+  xlab("Year") + ylab("Qty") +
+  ggtitle("(-MA Seasoning Data") +
+  scale_colour_manual(values=c("Data"="grey50","9-MA"="red"),
+                      breaks=c("Data","9-MA"))
+
+
+```
+
+
+
+```{r}
+model <- data.frame(Models= c("Mean","Naive","Snaive","Holt Winter-Add","Auto Arima","Arima","Moving_Avg(5MA)","Moving_Avg(7MA)","Moving_Avg(9MA)"),RMSE_=c(acc_m[2,2],acc_n[2,2],acc_sn[2,2],acc_hw[2,2],acc_au.arima[1,2],acc_arima[1,2],acc_5ma[1,2],acc_7ma[1,2],acc_9ma[1,2]),
+                    AIC=c("-","-","-",round(fit1$model$aic,2),round(arima.fit$aic,2),round(arima.fit2$aic,2),"-","-","-"))
+model
+
+pointforecast <- data.frame(Months = c("Jan 2017","Feb 2017","Mar 2017","Apr 2017","May 2017","Jun 2017","Jul 2017","Aug 2017","Sep 2017","Oct 2017","Nov 2017","Dec 2017"),
+                            Test=c(seasoning_test),Mean=c(na_mean$mean),Naive=c(na_naive$mean),SNaive=c(na_snaive$mean),Holt_Winters_Add=c(fit1$mean), Auto_Arima=c(pred$pred), Arima=c(pred1$pred), "5MA" =c(pred9$mean), "7_MA"=c(pred7$mean), "9_MA"=c(pred9$mean))
+
+pointforecast
+```
+
+
+
